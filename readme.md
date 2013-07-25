@@ -107,6 +107,7 @@ The following hints can be added in your document to flip on additional features
 - **\<!-- \[\[CLASS=name]] -->**: Specify a class type to use for a PDF, LaTeX or Beamer document.
 - **\<!-- \[\[HEADER]] -->**: Add the option to add a custom header for the convertion to Beamer (the file should be in the same directory than the Pandoc file).
 - **\<!-- \[\[NORENDER]] -->**: Option to not automatically start the associated program.
+- **\<!-- \[\[PATH_ENV=/path1:/path2]] -->**: Option to include executable search paths 
 
 
 *Note:* these hints are processed by the plugin and are NOT part of Pandoc itself.

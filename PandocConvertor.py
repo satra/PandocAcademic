@@ -166,7 +166,7 @@ class PandocConvertorCommand(sublime_plugin.TextCommand):
         else:
             output_file = filepath + "." + target
         # Adding separated blocks of text to run the command in sublime text
-        cmd = ['/usr/local/bin/pandoc', '--smart', '--standalone']
+        cmd = ['pandoc', '--smart', '--standalone']
         # Check for options in the Pandoc file
         cmd, openAfter, contents = self.opt(cmd, target, dir_path)
         # Create a temporary file to handle the contents
@@ -178,9 +178,6 @@ class PandocConvertorCommand(sublime_plugin.TextCommand):
             cmd.append('-t')
             cmd.append(target)
         cmd.append(tmp_md.name)
-        #if target == 'beamer':
-        #    cmd.append('-V')
-        #    cmd.append('theme:Warsaw')
         cmd.append("-o")
         cmd.append(output_file)
         return cmd, output_file, openAfter
@@ -200,12 +197,19 @@ class PandocConvertorCommand(sublime_plugin.TextCommand):
     def run(self, edit, target="html"):
         # Call the build command function to construct the final pandoc command
         cmd, output_filename, openAfter = self.buildCommand(target)
-        print(cmd)
         # Run the main command to convert the file
+        # Grab the content of the current buffer
+        contents = self.grabContent()
+        env=None
+        if '[[PATH_ENV' in contents:
+            regex_env = re.compile(r'\[\[PATH_ENV=(.+)\]\]')
+            if regex_env.search(contents) != None:
+                env = regex_env.search(contents).groups()[0]
+                env = {'PATH': env}
         try:
             if os.path.exists(output_filename):
                 os.unlink(output_filename)
-            subprocess.call(cmd)
+            subprocess.call(cmd, env=env)
         except Exception as e:
             sublime.error_message("Unable to execute Pandoc.\
                                     \n\nDetails: {0}".format(e))
