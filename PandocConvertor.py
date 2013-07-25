@@ -29,8 +29,8 @@ import sys
 import os
 import re
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
+#reload(sys)
+#sys.setdefaultencoding("utf-8")
 
 class PandocConvertorCommand(sublime_plugin.TextCommand):
     """ Convert a Pandoc file to HTML or Docx fileformat
@@ -45,12 +45,13 @@ class PandocConvertorCommand(sublime_plugin.TextCommand):
             self.view.score_selector(0, "text.html.markdown") > 0 or \
             self.view.score_selector(0, "text.html.markdown.multimarkdown") > 0:
             return True
+        return False
 
     def getTemplatePath(self, filename):
         path = os.path.join(sublime.packages_path(), 'Pandoc Academic',
                                 'Styles', filename)
         if os.path.isfile(path):
-            print "Template file found in the default template folder"
+            print("Template file found in the default template folder")
         else:
             raise Exception(filename + " file not found!")
         return path
@@ -165,18 +166,21 @@ class PandocConvertorCommand(sublime_plugin.TextCommand):
         else:
             output_file = filepath + "." + target
         # Adding separated blocks of text to run the command in sublime text
-        cmd = ['pandoc', '--smart', '--standalone']
+        cmd = ['/usr/local/bin/pandoc', '--smart', '--standalone']
         # Check for options in the Pandoc file
         cmd, openAfter, contents = self.opt(cmd, target, dir_path)
         # Create a temporary file to handle the contents
         tmp_md = tempfile.NamedTemporaryFile(delete=False, suffix=".md")
-        tmp_md.write(contents)
+        tmp_md.write(contents.encode('UTF-8'))
         tmp_md.close()
         # Complete the command function
         if target != 'pdf':
             cmd.append('-t')
             cmd.append(target)
         cmd.append(tmp_md.name)
+        #if target == 'beamer':
+        #    cmd.append('-V')
+        #    cmd.append('theme:Warsaw')
         cmd.append("-o")
         cmd.append(output_file)
         return cmd, output_file, openAfter
@@ -186,18 +190,21 @@ class PandocConvertorCommand(sublime_plugin.TextCommand):
         """
         if os.path.exists(filename):
             self.view.set_status('pandoc', 'File converted to ' + filename)
-            print "File converted to:", filename
+            print("File converted to: ", filename)
         else:
             self.view.set_status('pandoc', 'Error in the conversion!')
-            print "Unable to convert the file! Please check your options"
+            print("Unable to convert the file! Please check your options")
         time.sleep(2)
         self.view.erase_status('pandoc')
 
     def run(self, edit, target="html"):
         # Call the build command function to construct the final pandoc command
         cmd, output_filename, openAfter = self.buildCommand(target)
+        print(cmd)
         # Run the main command to convert the file
         try:
+            if os.path.exists(output_filename):
+                os.unlink(output_filename)
             subprocess.call(cmd)
         except Exception as e:
             sublime.error_message("Unable to execute Pandoc.\
@@ -210,7 +217,7 @@ class PandocConvertorCommand(sublime_plugin.TextCommand):
                 webbrowser.open_new_tab(output_filename)
             elif target != "html" and sys.platform == "win32":
                 os.startfile(output_filename)
-            elif target != "html" and sys.platform == "mac":
+            elif target != "html" and sys.platform == "darwin":
                 subprocess.call(["open", output_filename])
             else:
                 subprocess.call(["xdg-open", output_filename])

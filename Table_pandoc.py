@@ -16,6 +16,7 @@ class PandocTableCommand(sublime_plugin.TextCommand):
             self.view.score_selector(0, "text.html.markdown") > 0 or \
             self.view.score_selector(0, "text.html.markdown.multimarkdown") > 0:
             return True
+        return False
 
     def run(self, edit):
         # Grab the content of the current selection and split it by lines
@@ -30,7 +31,7 @@ class PandocTableCommand(sublime_plugin.TextCommand):
         # Build the final table and replace the current selection
         table = self.final_table(txt, col_widths)
         self.view.replace(edit, sel, table)
-        print "Table formatted"
+        print("Table formatted")
 
 
     def format_txt(self, txt):
